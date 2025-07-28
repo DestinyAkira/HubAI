@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Trail Generator{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-bold text-gray-800 mb-8">Audit Trail Generator</h1>
+
+<div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Filter Audit Logs</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label for="filterDate" class="block text-gray-700 text-sm font-bold mb-2">Date:</label>
+            <input type="date" id="filterDate" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        <div>
+            <label for="filterUser" class="block text-gray-700 text-sm font-bold mb-2">User:</label>
+            <input type="text" id="filterUser" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., admin@hubai.com">
+        </div>
+        <div>
+            <label for="filterProject" class="block text-gray-700 text-sm font-bold mb-2">Project:</label>
+            <input type="text" id="filterProject" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., AI Model X">
+        </div>
+    </div>
+    <div class="mt-6 flex space-x-4">
+        <button class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200" onclick="fetchAuditLogs()">Apply Filters</button>
+        <button class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors duration-200">Download Logs (CSV)</button>
+        <button class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors duration-200">Download Logs (JSON)</button>
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Audit Log Entries</h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">Timestamp</th>
+                    <th class="py-3 px-6 text-left">User</th>
+                    <th class="py-3 px-6 text-left">Action</th>
+                    <th class="py-3 px-6 text-left">Project</th>
+                </tr>
+            </thead>
+            <tbody id="auditLogTableBody" class="text-gray-600 text-sm font-light">
+                <!-- Data will be loaded here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function fetchAuditLogs() {
+        // Construct absolute URL using window.location.origin
+        const response = await fetch(window.location.origin + '/api/get-audit-logs');
+        const logs = await response.json();
+        const auditLogTableBody = document.getElementById('auditLogTableBody');
+        auditLogTableBody.innerHTML = ''; // Clear previous data
+
+        logs.forEach(log => {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-gray-200 hover:bg-gray-100';
+            row.innerHTML = `
+                <td class="py-3 px-6 text-left whitespace-nowrap">${log.timestamp}</td>
+                <td class="py-3 px-6 text-left">${log.user}</td>
+                <td class="py-3 px-6 text-left">${log.action}</td>
+                <td class="py-3 px-6 text-left">${log.project}</td>
+            `;
+            auditLogTableBody.appendChild(row);
+        });
+    }
+
+    // Fetch data when the page loads
+    document.addEventListener('DOMContentLoaded', fetchAuditLogs);
+</script>
+{% endblock %}

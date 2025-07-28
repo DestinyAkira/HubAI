@@ -1,0 +1,43 @@
+
+AI Model Documentation
+
+Model Name: Customer Risk Predictor
+Version: 1.0
+Developed By: Data Science Team
+Date Created: 2025-07-26
+
+Objective:
+To predict customer risk level based on demographic, transactional, and behavioral data.
+
+Model Type: Supervised Learning - Classification
+Algorithm Used: Random Forest Classifier
+
+Inputs (Features):
+- Age
+- Income
+- Number of Transactions per Month
+- Credit Score
+- Account Age
+- Location
+
+Output:
+- Risk Category (Low, Medium, High)
+
+Training Dataset:
+- Source: Internal CRM and Transactional Systems
+- Size: 25,000 records
+- Training/Validation Split: 80/20
+
+Performance Metrics:
+- Accuracy: 87%
+- Precision: 85%
+- Recall: 83%
+- F1-Score: 84%
+
+Compliance:
+- GDPR Compliant
+- Barbados Data Protection Act Compliant
+
+Audit Trail:
+- Version control maintained via GitHub
+- All data anonymized before training

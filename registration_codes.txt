@@ -1,0 +1,9 @@
+Here are the registration codes for the different account types in your Hub AI application:
+
+Analyst Role Code: analyst_secret_123
+
+Support Role Code: support_secret_123
+
+Admin Role Code: admin_secret_123
+
+Important Security Note: In a production environment, these codes should never be hardcoded in your application files or shared publicly. They should be managed securely, for example, as environment variables or through a dedicated secrets management system.

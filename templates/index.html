@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-bold text-gray-800 mb-8">Welcome to Hub AI Dashboard</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div class="bg-white p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Compliance Overview</h2>
+        <p class="text-gray-600 mb-4">Quick glance at overall compliance status.</p>
+        {% if recent_compliance %}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Last Scan:</span>
+                <span class="text-gray-600 text-xl">{{ recent_compliance.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Project:</span>
+                <span class="text-blue-600 text-xl font-bold">{{ recent_compliance.project_name }}</span>
+            </div>
+            {% set gdpr_score = (recent_compliance.compliance_score | from_json).GDPR | default(0) %}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">GDPR Score:</span>
+                <span class="text-blue-600 text-2xl font-bold">{{ gdpr_score }}%</span>
+            </div>
+            <div class="bg-gray-200 rounded-full h-2.5 mb-4">
+                {# Ensure gdpr_score is an integer and then explicitly a string for CSS width property #}
+                <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ gdpr_score | int }}%"></div>
+            </div>
+        {% else %}
+            <p class="text-gray-500">No recent compliance reports. Run a scan!</p>
+        {% endif %}
+        <a href="/compliance-scanner" class="text-blue-600 hover:underline">View Compliance Report &rarr;</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Risk Summary</h2>
+        <p class="text-gray-600 mb-4">Real-time insights into potential risks.</p>
+        {% if recent_risk %}
+            {% set risk_color = 'red' if recent_risk.overall_risk == 'High' else 'orange' if recent_risk.overall_risk == 'Medium' else 'green' if recent_risk.overall_risk == 'Low' else 'gray' %}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Overall Risk:</span>
+                <span class="text-{{ risk_color }}-600 text-xl font-bold">{{ recent_risk.overall_risk }}</span>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Last Assessed:</span>
+                <span class="text-gray-600 text-xl">{{ recent_risk.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            {% set alerts_list = (recent_risk.alerts | from_json) | default([]) %}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Alerts:</span>
+                <span class="text-yellow-600 text-xl font-bold">{{ alerts_list | length }} Pending</span>
+            </div>
+        {% else %}
+            <p class="text-gray-500">No recent risk assessments. Add one!</p>
+        {% endif %}
+        <a href="/risk-dashboard" class="text-blue-600 hover:underline">Go to Risk Dashboard &rarr;</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Audit Trail</h2>
+        <p class="text-gray-600 mb-4">Recent activities logged across projects.</p>
+        {% if recent_audit %}
+            <ul class="list-disc list-inside text-gray-600 mb-4">
+                <li><span class="font-medium">{{ recent_audit.timestamp.strftime('%Y-%m-%d %H:%M') }}:</span> {{ recent_audit.action }} by {{ recent_audit.user }}</li>
+            </ul>
+        {% else %}
+            <p class="text-gray-500">No audit logs yet.</p>
+        {% endif %}
+        <a href="/audit-trail-generator" class="text-blue-600 hover:underline">View Full Audit Log &rarr;</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Consent Status</h2>
+        <p class="text-gray-600 mb-4">Overview of data consent and licensing.</p>
+        {% if recent_consent %}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Last Update:</span>
+                <span class="text-gray-600 text-xl">{{ recent_consent.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Dataset:</span>
+                <span class="text-green-600 text-xl font-bold">{{ recent_consent.dataset_name }}</span>
+            </div>
+            {% set consent_color = 'green' if recent_consent.consent_status == 'Valid' else 'red' if recent_consent.consent_status == 'Missing' else 'gray' %}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-medium">Status:</span>
+                <span class="text-{{ consent_color }}-600 text-xl font-bold">{{ recent_consent.consent_status }}</span>
+            </div>
+        {% else %}
+            <p class="text-gray-500">No consent records yet.</p>
+        {% endif %}
+        <a href="/consent-tracker" class="text-blue-600 hover:underline">Manage Consent &rarr;</a>
+    </div>
+</div>
+
+{% endblock %}

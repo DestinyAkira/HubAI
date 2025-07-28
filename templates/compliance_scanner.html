@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Compliance Scanner{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-bold text-gray-800 mb-8">Compliance Scanner</h1>
+
+{# Only show the scan form if the user is an Admin or Analyst #}
+{% if current_user.role == 'admin' or current_user.role == 'analyst' %}
+<div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Run New Compliance Scan</h2>
+    <form id="complianceScanForm" class="space-y-4" enctype="multipart/form-data">
+        <div>
+            <label for="projectName" class="block text-gray-700 text-sm font-bold mb-2">Project Name:</label>
+            <input type="text" id="projectName" name="projectName" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., Q3 Data Processing Audit" required>
+        </div>
+        <div>
+            <label for="modelDoc" class="block text-gray-700 text-sm font-bold mb-2">AI Model Documentation (PDF/DOCX/TXT):</label>
+            <input type="file" id="modelDoc" name="modelDoc" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept=".pdf,.doc,.docx,.txt">
+        </div>
+        <div>
+            <label for="datasetLogs" class="block w-full text-sm font-bold mb-2">Dataset/Usage Logs (TXT/CSV/JSON/LOG - Multiple Allowed):</label>
+            <input type="file" id="datasetLogs" name="datasetLogs" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept=".txt,.csv,.json,.log">
+        </div>
+        <div>
+            <label for="regulatoryDocsUrls" class="block text-gray-700 text-sm font-bold mb-2">Regulatory Document URLs (one per line, PDF/HTML):</label>
+            <textarea id="regulatoryDocsUrls" name="regulatoryDocsUrls" rows="4" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g.,&#10;https://example.com/gdpr.pdf&#10;https://example.com/hipaa-guide.html"></textarea>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">Initiate Scan</button>
+    </form>
+    <div id="scanStatus" class="mt-4 p-3 rounded-lg text-sm bg-blue-100 text-blue-700 hidden"></div>
+</div>
+{% else %}
+<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8 rounded-lg" role="alert">
+    <p class="font-bold">Access Restricted</p>
+    <p>Your role ({{ current_user.role | capitalize }}) does not permit initiating new compliance scans.</p>
+</div>
+{% endif %}
+
+
+<div class="bg-white p-6 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Compliance Reports</h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">Project Name</th>
+                    <th class="py-3 px-6 text-left">Date</th>
+                    <th class="py-3 px-6 text-left">GDPR Score</th>
+                    <th class="py-3 px-6 text-left">HIPAA Score</th>
+                    <th class="py-3 px-6 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="complianceReportsTableBody" class="text-gray-600 text-sm font-light">
+                {# Reports are passed from Flask backend and rendered here #}
+                {% if reports %}
+                    {% for report in reports %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">{{ report.project_name }}</td>
+                        <td class="py-3 px-6 text-left">{{ (report.timestamp.split('T'))[0] }}</td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="font-bold text-{{ 'red' if report.compliance_score.GDPR < 50 else 'orange' if report.compliance_score.GDPR < 75 else 'green' }}-600">
+                                {{ report.compliance_score.GDPR }}%
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="font-bold text-{{ 'red' if report.compliance_score.HIPAA < 50 else 'orange' if report.compliance_score.HIPAA < 75 else 'green' }}-600">
+                                {{ report.compliance_score.HIPAA }}%
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <button class="text-blue-600 hover:underline" onclick="viewComplianceReportDetails({{ report.id }})">View Details</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="5" class="py-3 px-6 text-center">No compliance reports found.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Compliance Report Details Modal -->
+<div id="complianceDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center pb-3">
+            <h3 class="text-2xl font-semibold text-gray-800">Compliance Report Details</h3>
+            <button class="text-gray-400 hover:text-gray-600" onclick="closeComplianceDetailsModal()">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="mt-2 text-gray-700 space-y-3">
+            <p><strong>Project Name:</strong> <span id="modalProjectName"></span></p>
+            <p><strong>Scan Date:</strong> <span id="modalScanDate"></span></p>
+            <p><strong>Note:</strong> <span id="modalNote"></span></p>
+            
+            <h4 class="font-semibold mt-4 mb-2">Compliance Scores:</h4>
+            <div id="modalComplianceScores" class="bg-gray-100 p-3 rounded-lg text-sm grid grid-cols-2 gap-2"></div>
+
+            <h4 class="font-semibold mt-4 mb-2">Recommendations:</h4>
+            <ul id="modalRecommendations" class="list-disc list-inside ml-4"></ul>
+
+            <h4 class="font-semibold mt-4 mb-2">Severity Levels:</h4>
+            <div id="modalSeverityLevels" class="bg-gray-100 p-3 rounded-lg text-sm"></div>
+
+            <h4 class="font-semibold mt-4 mb-2">Uploaded Files:</h4>
+            <ul id="modalUploadedFiles" class="list-disc list-inside ml-4"></ul>
+
+            <h4 class="font-semibold mt-4 mb-2">Regulatory Docs Processed:</h4>
+            <ul id="modalRegulatoryDocs" class="list-disc list-inside ml-4"></ul>
+
+            <h4 class="font-semibold mt-4 mb-2">Extracted Content Sample:</h4>
+            <pre id="modalExtractedContent" class="bg-gray-100 p-3 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"></pre>
+        </div>
+        <div class="items-center px-4 py-3">
+            <button id="modalCloseBtn" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+{# Hidden script tag to safely pass JSON data to JavaScript #}
+<script type="application/json" id="complianceReportsData">
+    {% if reports %}{{ reports | tojson | safe }}{% else %}[]{% endif %}
+</script>
+
+<script>
+    // Debugging line: Print the raw text content of the script tag
+    console.log("Raw JSON data from script tag:", document.getElementById('complianceReportsData').textContent);
+
+    let allComplianceReports = [];
+    try {
+        // Read the JSON data from the script tag and parse it, trimming whitespace
+        const rawJsonText = document.getElementById('complianceReportsData').textContent.trim();
+        if (rawJsonText) { // Only attempt to parse if the string is not empty
+            allComplianceReports = JSON.parse(rawJsonText);
+        } else {
+            console.warn("complianceReportsData script tag content is empty after trimming. Defaulting to empty array.");
+        }
+    } catch (error) {
+        console.error("Error parsing JSON for allComplianceReports:", error);
+        console.error("Problematic JSON string:", document.getElementById('complianceReportsData').textContent.trim());
+        // Fallback to an empty array if parsing fails
+        allComplianceReports = [];
+    }
+
+    document.getElementById('complianceScanForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        const scanStatusDiv = document.getElementById('scanStatus');
+
+        scanStatusDiv.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+        scanStatusDiv.classList.add('bg-blue-100', 'text-blue-700');
+        scanStatusDiv.textContent = 'Initiating scan... This may take a moment.';
+
+        try {
+            const response = await fetch(window.location.origin + '/api/scan-compliance', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                scanStatusDiv.classList.remove('bg-blue-100', 'text-blue-700');
+                scanStatusDiv.classList.add('bg-green-100', 'text-green-700');
+                scanStatusDiv.textContent = `Scan completed for project "${result.project_name}"! Status: ${result.status}`;
+                form.reset(); // Clear the form
+                // Reload the page or update the table dynamically to show the new report
+                window.location.reload(); 
+            } else {
+                scanStatusDiv.classList.remove('bg-blue-100', 'text-blue-700');
+                scanStatusDiv.classList.add('bg-red-100', 'text-red-700');
+                scanStatusDiv.textContent = `Error: ${result.error || 'Failed to initiate scan.'}`;
+            }
+        } catch (error) {
+            console.error('Network or server error:', error);
+            scanStatusDiv.classList.remove('bg-blue-100', 'text-blue-700');
+            scanStatusDiv.classList.add('bg-red-100', 'text-red-700');
+            scanStatusDiv.textContent = 'Network error. Please check your connection and try again.';
+        }
+    });
+
+    function viewComplianceReportDetails(reportId) {
+        const report = allComplianceReports.find(r => r.id === reportId);
+        if (!report) {
+            console.error("Compliance report not found:", reportId);
+            return;
+        }
+
+        document.getElementById('modalProjectName').textContent = report.project_name;
+        document.getElementById('modalScanDate').textContent = new Date(report.timestamp).toLocaleString();
+        document.getElementById('modalNote').textContent = report.note || 'N/A';
+
+        // Populate Compliance Scores
+        const modalComplianceScores = document.getElementById('modalComplianceScores');
+        modalComplianceScores.innerHTML = '';
+        for (const [key, value] of Object.entries(report.compliance_score)) {
+            const scoreItem = document.createElement('div');
+            scoreItem.className = 'flex justify-between items-center';
+            scoreItem.innerHTML = `<span class="font-medium">${key}:</span> <span class="font-bold text-lg text-${value < 50 ? 'red' : value < 75 ? 'orange' : 'green'}-600">${value}%</span>`;
+            modalComplianceScores.appendChild(scoreItem);
+        }
+
+        // Populate Recommendations
+        const modalRecommendations = document.getElementById('modalRecommendations');
+        modalRecommendations.innerHTML = '';
+        if (report.recommendations && report.recommendations.length > 0) {
+            report.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                modalRecommendations.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.textContent = 'No specific recommendations.';
+            modalRecommendations.appendChild(li);
+        }
+
+        // Populate Severity Levels
+        const modalSeverityLevels = document.getElementById('modalSeverityLevels');
+        modalSeverityLevels.innerHTML = '';
+        if (Object.keys(report.severity_levels).length > 0) {
+            for (const [key, value] of Object.entries(report.severity_levels)) {
+                const severityItem = document.createElement('p');
+                severityItem.innerHTML = `<span class="font-medium">${key}:</span> <span class="font-bold text-${value === 'High' ? 'red' : value === 'Medium' ? 'orange' : 'green'}-600">${value}</span>`;
+                modalSeverityLevels.appendChild(severityItem);
+            }
+        } else {
+            modalSeverityLevels.textContent = 'No specific severity levels identified.';
+        }
+
+        // Populate Uploaded Files
+        const modalUploadedFiles = document.getElementById('modalUploadedFiles');
+        modalUploadedFiles.innerHTML = '';
+        if (report.uploaded_files && report.uploaded_files.length > 0) {
+            report.uploaded_files.forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = file;
+                modalUploadedFiles.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.textContent = 'No files uploaded for this scan.';
+            modalUploadedFiles.appendChild(li);
+        }
+
+        // Populate Regulatory Docs Processed
+        const modalRegulatoryDocs = document.getElementById('modalRegulatoryDocs');
+        modalRegulatoryDocs.innerHTML = '';
+        if (report.regulatory_docs_processed && report.regulatory_docs_processed.length > 0) {
+            report.regulatory_docs_processed.forEach(doc => {
+                const li = document.createElement('li');
+                li.textContent = doc;
+                modalRegulatoryDocs.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.textContent = 'No regulatory documents processed.';
+            modalRegulatoryDocs.appendChild(li);
+        }
+
+        // Populate Extracted Content Sample
+        document.getElementById('modalExtractedContent').textContent = report.extracted_uploaded_content_sample || 'No extracted content sample available.';
+
+        document.getElementById('complianceDetailsModal').classList.remove('hidden');
+    }
+
+    function closeComplianceDetailsModal() {
+        document.getElementById('complianceDetailsModal').classList.add('hidden');
+    }
+
+    document.getElementById('modalCloseBtn').addEventListener('click', closeComplianceDetailsModal);
+</script>
+{% endblock %}

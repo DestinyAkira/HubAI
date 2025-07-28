@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub AI - Register</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Register for Hub AI</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="p-3 rounded-lg text-sm {% if category == 'error' %}bg-red-100 text-red-700{% elif category == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('register') }}" class="space-y-5">
+            <div>
+                <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
+                <input type="text" id="username" name="username" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+            </div>
+            <div>
+                <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
+                <input type="email" id="email" name="email" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+            </div>
+            <div>
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+                <input type="password" id="password" name="password" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <div class="mt-2 flex items-center">
+                    <input type="checkbox" id="showPassword" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                    <label for="showPassword" class="ml-2 text-gray-700 text-sm">Show Password</label>
+                </div>
+            </div>
+            <div>
+                <label for="role" class="block text-gray-700 text-sm font-bold mb-2">Account Type:</label>
+                <select id="role" name="role" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    {# 'user' role removed, 'analyst' is now the default/base role #}
+                    <option value="analyst">Analyst</option>
+                    <option value="support">Support</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div id="registrationCodeField" class="hidden">
+                <label for="registration_code" class="block text-gray-700 text-sm font-bold mb-2">Registration Code (Required for privileged roles):</label>
+                <input type="text" id="registration_code" name="registration_code" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 w-full">Register</button>
+        </form>
+        <p class="text-center text-gray-600 text-sm mt-4">
+            Already have an account? <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Log In</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('showPassword').addEventListener('change', function() {
+            const passwordField = document.getElementById('password');
+            if (this.checked) {
+                passwordField.type = 'text';
+            } else {
+                passwordField.type = 'password';
+            }
+        });
+
+        document.getElementById('role').addEventListener('change', function() {
+            const role = this.value;
+            const regCodeField = document.getElementById('registrationCodeField');
+            // Show registration code field for Analyst, Support, and Admin
+            if (role === 'admin' || role === 'support' || role === 'analyst') {
+                regCodeField.classList.remove('hidden');
+                document.getElementById('registration_code').setAttribute('required', 'required');
+            } else {
+                regCodeField.classList.add('hidden');
+                document.getElementById('registration_code').removeAttribute('required');
+                document.getElementById('registration_code').value = ''; // Clear value if hidden
+            }
+        });
+
+        // Initialize on page load in case 'analyst' is the default selected option
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('role');
+            const regCodeField = document.getElementById('registrationCodeField');
+            if (roleSelect.value === 'analyst' || roleSelect.value === 'admin' || roleSelect.value === 'support') {
+                regCodeField.classList.remove('hidden');
+                document.getElementById('registration_code').setAttribute('required', 'required');
+            }
+        });
+    </script>
+</body>
+</html>
