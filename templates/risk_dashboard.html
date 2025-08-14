@@ -1,390 +1,224 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Dashboard</title>
+    <!-- Use the Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for the risk level colors */
+        .risk-low {
+            @apply bg-green-200 text-green-800;
+        }
+        .risk-medium {
+            @apply bg-yellow-200 text-yellow-800;
+        }
+        .risk-high {
+            @apply bg-red-200 text-red-800;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-{% block title %}Risk Dashboard{% endblock %}
+        <!-- Main Dashboard Section -->
+        <div class="lg:col-span-2">
+            <!-- Overall Risk Level Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-4">Overall Risk Level</h2>
+                <div class="p-4 rounded-lg risk-medium font-semibold text-center text-xl">
+                    Medium
+                </div>
+            </div>
 
-{% block content %}
-<h1 class="text-4xl font-bold text-gray-800 mb-8">Risk Dashboard</h1>
+            <!-- High Risk Projects Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-4">High Risk Projects</h2>
+                <ul class="space-y-4">
+                    <li class="flex items-center justify-between p-4 bg-red-100 rounded-lg" id="project-ai-model-x">
+                        <span class="text-red-800 font-medium">AI Model X</span>
+                        <button onclick="openMitigationModal('AI Model X')" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">
+                            Initiate Mitigation Plan
+                        </button>
+                    </li>
+                    <li class="flex items-center justify-between p-4 bg-red-100 rounded-lg" id="project-fraud-detection">
+                        <span class="text-red-800 font-medium">Fraud Detection System</span>
+                        <button onclick="openMitigationModal('Fraud Detection System')" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">
+                            Initiate Mitigation Plan
+                        </button>
+                    </li>
+                </ul>
+            </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-    <div class="bg-white p-6 rounded-xl shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Overall Risk Level</h2>
-        <p id="overallRisk" class="text-5xl font-bold text-center text-orange-500">Loading...</p>
-    </div>
-    <div class="bg-white p-6 rounded-xl shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">High Risk Projects</h2>
-        <ul id="highRiskProjects" class="list-disc list-inside text-gray-700">
-            <li>Loading...</li>
-        </ul>
-    </div>
-    <div class="bg-white p-6 rounded-xl shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Risk Alerts</h2>
-        <ul id="riskAlerts" class="list-disc list-inside text-gray-700">
-            <li>Loading...</li>
-        </ul>
-    </div>
-</div>
-
-<div class="bg-white p-6 rounded-xl shadow-lg mb-8">
-    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Submit New Risk Assessment</h2>
-    <form id="riskAssessmentForm" class="space-y-4">
-        <div>
-            <label for="riskProjectName" class="block text-gray-700 text-sm font-bold mb-2">Project Name:</label>
-            <input type="text" id="riskProjectName" name="projectName" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., New AI Deployment" required>
+            <!-- Risk Alerts Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Risk Alerts</h2>
+                <ul class="space-y-2">
+                    <li class="bg-yellow-100 p-3 rounded-lg text-yellow-800">
+                        <span class="font-bold">Simulated:</span> Bias detected in 'AI Model X'
+                    </li>
+                    <li class="bg-yellow-100 p-3 rounded-lg text-yellow-800">
+                        <span class="font-bold">Simulated:</span> Legal compliance overdue for 'Project Alpha'
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div>
-            <label for="overallRiskInput" class="block text-gray-700 text-sm font-bold mb-2">Overall Risk Level:</label>
-            <select id="overallRiskInput" name="overallRisk" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                <option value="">Select Risk Level</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-            </select>
-        </div>
-        <div>
-            <label for="riskScoresInput" class="block text-gray-700 text-sm font-bold mb-2">Risk Scores (JSON format, e.g., {"Bias": 70, "Security": 50}):</label>
-            <textarea id="riskScoresInput" name="riskScores" rows="3" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder='{"Bias": 70, "Security": 50, "Legal": 80}'></textarea>
-        </div>
-        <div>
-            <label for="alertsInput" class="block text-gray-700 text-sm font-bold mb-2">Alerts (one per line):</label>
-            <textarea id="alertsInput" name="alerts" rows="3" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g.,&#10;Potential bias in dataset&#10;Security vulnerability detected"></textarea>
-        </div>
-        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">Submit Risk Assessment</button>
-    </form>
-</div>
 
-<div class="bg-white p-6 rounded-xl shadow-lg mb-8">
-    <h2 class="text-2xl font-semibold text-gray-700 mb-4">All Risk Assessments</h2>
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded-lg shadow-md">
-            <thead>
-                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                    <th class="py-3 px-6 text-left">Project</th>
-                    <th class="py-3 px-6 text-left">Overall Risk</th>
-                    <th class="py-3 px-6 text-left">Date</th>
-                    <th class="py-3 px-6 text-left">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="allRiskAssessmentsTableBody" class="text-gray-600 text-sm font-light">
-                <!-- Data will be loaded here by JavaScript -->
-            </tbody>
-        </table>
+        <!-- Submit New Risk Assessment Section -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Submit New Risk Assessment</h2>
+                <form onsubmit="event.preventDefault(); submitAssessment(event);" class="space-y-4">
+                    <div>
+                        <label for="projectName" class="block text-gray-700 font-medium mb-1">Project Name:</label>
+                        <input type="text" id="projectName" name="projectName" class="w-full border-gray-300 rounded-lg p-2" required>
+                    </div>
+                    <div>
+                        <label for="overallRisk" class="block text-gray-700 font-medium mb-1">Overall Risk Level:</label>
+                        <select id="overallRisk" name="overallRisk" class="w-full border-gray-300 rounded-lg p-2">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="riskScores" class="block text-gray-700 font-medium mb-1">Risk Scores (JSON format):</label>
+                        <textarea id="riskScores" name="riskScores" rows="3" class="w-full border-gray-300 rounded-lg p-2" placeholder='e.g., {"Bias": 70, "Security": 50}'></textarea>
+                    </div>
+                    <div>
+                        <label for="alerts" class="block text-gray-700 font-medium mb-1">Alerts (one per line):</label>
+                        <textarea id="alerts" name="alerts" rows="3" class="w-full border-gray-300 rounded-lg p-2"></textarea>
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors w-full">
+                        Submit Risk Assessment
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
-
-<div class="bg-white p-6 rounded-xl shadow-lg">
-    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Risk Heatmap</h2>
-    <div class="h-80 w-full flex items-center justify-center">
-        <canvas id="riskHeatmapChart"></canvas>
-    </div>
-</div>
-
-<!-- Risk Assessment Details Modal -->
-<div id="riskDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
-        <div class="flex justify-between items-center pb-3">
-            <h3 class="text-2xl font-semibold text-gray-800">Risk Assessment Details</h3>
-            <button class="text-gray-400 hover:text-gray-600" onclick="closeRiskDetailsModal()">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    
+    <!-- Custom Modal for general Alerts -->
+    <div id="customAlert" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+          <h3 class="text-lg leading-6 font-medium text-gray-900" id="alertTitle">Alert</h3>
+          <div class="mt-2 px-7 py-3">
+            <p class="text-sm text-gray-500" id="alertMessage">A message.</p>
+          </div>
+          <div class="items-center px-4 py-3">
+            <button id="closeAlert" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+              OK
             </button>
+          </div>
         </div>
-        <div class="mt-2 text-gray-700">
-            <p><strong>Project Name:</strong> <span id="modalRiskProjectName"></span></p>
-            <p><strong>Overall Risk:</strong> <span id="modalOverallRisk"></span></p>
-            <p><strong>Assessment Date:</strong> <span id="modalRiskDate"></span></p>
-            <h4 class="font-semibold mt-4 mb-2">Risk Scores:</h4>
-            <pre id="modalRiskScores" class="bg-gray-100 p-3 rounded-lg text-sm overflow-x-auto"></pre>
-            <h4 class="font-semibold mt-4 mb-2">Alerts:</h4>
-            <ul id="modalRiskAlerts" class="list-disc list-inside ml-4"></ul>
-            <h4 class="font-semibold mt-4 mb-2">Risk Heatmaps (Placeholder):</h4>
-            <pre id="modalRiskHeatmaps" class="bg-gray-100 p-3 rounded-lg text-sm overflow-x-auto">No heatmap data available for this assessment.</pre>
-        </div>
-        <div class="items-center px-4 py-3">
-            <button id="modalRiskCloseBtn" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                Close
-            </button>
-        </div>
+      </div>
     </div>
-</div>
 
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix"></script>
-
+    <!-- New Mitigation Plan Modal -->
+    <div id="mitigationPlanModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white">
+        <div class="mt-3">
+          <h3 class="text-xl leading-6 font-bold text-gray-900 mb-4 text-center">Mitigation Plan for: <span id="mitigationProjectName"></span></h3>
+          <form onsubmit="event.preventDefault(); submitMitigationPlan(event);">
+            <div class="space-y-4">
+              <div>
+                <label for="mitigationDescription" class="block text-gray-700 font-medium mb-1">Description:</label>
+                <textarea id="mitigationDescription" rows="4" class="w-full border-gray-300 rounded-lg p-2" required></textarea>
+              </div>
+              <div>
+                <label for="responsibleTeam" class="block text-gray-700 font-medium mb-1">Responsible Team Member(s):</label>
+                <input type="text" id="responsibleTeam" class="w-full border-gray-300 rounded-lg p-2" required>
+              </div>
+              <div>
+                <label for="dueDate" class="block text-gray-700 font-medium mb-1">Due Date:</label>
+                <input type="date" id="dueDate" class="w-full border-gray-300 rounded-lg p-2" required>
+              </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+              <button type="button" onclick="closeMitigationModal()" class="px-4 py-2 bg-gray-300 text-gray-800 font-medium rounded-lg hover:bg-gray-400 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
+                Submit Plan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
     <script>
-    let allRiskAssessments = []; // Store all fetched risk assessments globally
-    let riskHeatmapChart = null; // To hold the Chart.js instance
-
-    async function fetchRiskData() {
-        // Fetch the most recent risk data for the summary cards
-        const summaryResponse = await fetch(window.location.origin + '/api/get-risk-data');
-        const summaryData = await summaryResponse.json();
-
-        document.getElementById('overallRisk').textContent = summaryData.overall_risk;
-        document.getElementById('overallRisk').className = `text-5xl font-bold text-center ${
-            summaryData.overall_risk === 'High' ? 'text-red-500' :
-            summaryData.overall_risk === 'Medium' ? 'text-orange-500' :
-            'text-green-500'
-        }`;
-
-        const highRiskProjectsList = document.getElementById('highRiskProjects');
-        highRiskProjectsList.innerHTML = '';
-        if (summaryData.risk_scores) {
-            Object.keys(summaryData.risk_scores).filter(key => summaryData.risk_scores[key].category === 'High').forEach(project => {
-                const li = document.createElement('li');
-                li.textContent = project;
-                highRiskProjectsList.appendChild(li);
-            });
-        } else {
-            const li = document.createElement('li');
-            li.textContent = 'No high risk projects identified.';
-            highRiskProjectsList.appendChild(li);
+        // Custom alert function to replace window.alert()
+        function customAlert(message) {
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('customAlert').classList.remove('hidden');
         }
 
-        const riskAlertsList = document.getElementById('riskAlerts');
-        riskAlertsList.innerHTML = '';
-        if (summaryData.alerts && summaryData.alerts.length > 0) {
-            summaryData.alerts.forEach(alert => {
-                const li = document.createElement('li');
-                li.textContent = alert;
-                riskAlertsList.appendChild(li);
-            });
-        } else {
-            const li = document.createElement('li');
-            li.textContent = 'No active alerts.';
-            riskAlertsList.appendChild(li);
-        }
-
-        // Fetch all risk assessments for the table
-        const allAssessmentsResponse = await fetch(window.location.origin + '/api/get-all-risk-assessments');
-        allRiskAssessments = await allAssessmentsResponse.json();
-        renderAllRiskAssessments(allRiskAssessments);
-
-        // Render the heatmap with the latest risk assessment's heatmap data
-        if (allRiskAssessments.length > 0) {
-            renderHeatmap(allRiskAssessments[0].risk_heatmaps);
-        } else {
-            // Clear or show a message if no heatmap data is available
-            const ctx = document.getElementById('riskHeatmapChart').getContext('2d');
-            if (riskHeatmapChart) {
-                riskHeatmapChart.destroy();
-            }
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.font = '16px Inter';
-            ctx.textAlign = 'center';
-            ctx.fillText('No heatmap data available.', ctx.canvas.width / 2, ctx.canvas.height / 2);
-        }
-    }
-
-    function renderAllRiskAssessments(assessmentsToRender) {
-        const allRiskAssessmentsTableBody = document.getElementById('allRiskAssessmentsTableBody');
-        allRiskAssessmentsTableBody.innerHTML = ''; // Clear previous data
-
-        if (assessmentsToRender.length === 0) {
-            allRiskAssessmentsTableBody.innerHTML = '<tr><td colspan="4" class="py-3 px-6 text-center">No risk assessments found.</td></tr>';
-            return;
-        }
-
-        assessmentsToRender.forEach(assessment => {
-            const row = document.createElement('tr');
-            row.className = 'border-b border-gray-200 hover:bg-gray-100';
-            const riskCategoryClass = assessment.overall_risk === 'High' ? 'text-red-600 font-semibold' :
-                                      assessment.overall_risk === 'Medium' ? 'text-orange-600 font-semibold' :
-                                      'text-green-600 font-semibold';
-            row.innerHTML = `
-                <td class="py-3 px-6 text-left whitespace-nowrap">${assessment.project_name}</td>
-                <td class="py-3 px-6 text-left"><span class="${riskCategoryClass}">${assessment.overall_risk}</span></td>
-                <td class="py-3 px-6 text-left">${new Date(assessment.timestamp).toLocaleString()}</td>
-                <td class="py-3 px-6 text-left">
-                    <button class="text-blue-600 hover:underline mr-2" onclick="viewRiskDetails(${assessment.id})">View Details</button>
-                    <button class="text-purple-600 hover:underline" onclick="handleMitigationPlan('${assessment.project_name}')">Mitigation Plan</button>
-                </td>
-            `;
-            allRiskAssessmentsTableBody.appendChild(row);
-        });
-    }
-
-    function viewRiskDetails(assessmentId) {
-        const assessment = allRiskAssessments.find(a => a.id === assessmentId);
-        if (!assessment) {
-            console.error("Risk assessment not found:", assessmentId);
-            return;
-        }
-
-        document.getElementById('modalRiskProjectName').textContent = assessment.project_name;
-        document.getElementById('modalOverallRisk').textContent = assessment.overall_risk;
-        document.getElementById('modalRiskDate').textContent = new Date(assessment.timestamp).toLocaleString();
-        
-        document.getElementById('modalRiskScores').textContent = JSON.stringify(assessment.risk_scores, null, 2);
-        
-        const modalRiskAlertsList = document.getElementById('modalRiskAlerts');
-        modalRiskAlertsList.innerHTML = '';
-        if (assessment.alerts && assessment.alerts.length > 0) {
-            assessment.alerts.forEach(alert => {
-                const li = document.createElement('li');
-                li.textContent = alert;
-                modalRiskAlertsList.appendChild(li);
-            });
-        } else {
-            const li = document.createElement('li');
-            li.textContent = 'No alerts for this assessment.';
-            modalRiskAlertsList.appendChild(li);
-        }
-
-        document.getElementById('modalRiskHeatmaps').textContent = JSON.stringify(assessment.risk_heatmaps, null, 2) || 'No heatmap data available for this assessment.';
-
-        document.getElementById('riskDetailsModal').classList.remove('hidden');
-    }
-
-    function closeRiskDetailsModal() {
-        document.getElementById('riskDetailsModal').classList.add('hidden');
-    }
-
-    document.getElementById('modalRiskCloseBtn').addEventListener('click', closeRiskDetailsModal);
-
-    // Placeholder function for Mitigation Plan button
-    function handleMitigationPlan(projectName) {
-        alert(`Initiating mitigation plan for project: ${projectName}. (Functionality to be implemented)`);
-        console.log(`Mitigation Plan button clicked for project: ${projectName}`);
-    }
-
-
-    document.getElementById('riskAssessmentForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        
-        const form = event.target;
-        const projectName = document.getElementById('riskProjectName').value;
-        const overallRisk = document.getElementById('overallRiskInput').value;
-        let riskScores = {};
-        try {
-            riskScores = JSON.parse(document.getElementById('riskScoresInput').value);
-        } catch (e) {
-            console.error("Invalid JSON for Risk Scores:", e);
-            alert("Invalid JSON format for Risk Scores. Please ensure it's valid JSON (e.g., {\"Bias\": 70}).");
-            return;
-        }
-        const alerts = document.getElementById('alertsInput').value.split('\n').map(s => s.trim()).filter(s => s);
-
-        // For heatmap, let's create some dummy data based on categories
-        const riskHeatmaps = {};
-        if (riskScores) {
-            for (const category in riskScores) {
-                const score = riskScores[category];
-                if (score >= 70) riskHeatmaps[category] = "High";
-                else if (score >= 40) riskHeatmaps[category] = "Medium";
-                else riskHeatmaps[category] = "Low";
-            }
-        }
-
-
-        const response = await fetch(window.location.origin + '/api/submit-risk-assessment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                projectName: projectName,
-                overallRisk: overallRisk,
-                riskScores: riskScores,
-                riskHeatmaps: riskHeatmaps, // Include generated heatmap data
-                alerts: alerts
-            })
-        });
-        const result = await response.json();
-        if (response.ok) {
-            console.log(result.message); // Log success
-            form.reset(); // Clear the form
-            fetchRiskData(); // Refresh the dashboard data
-        } else {
-            console.error("Error submitting risk assessment: " + result.error);
-            alert("Error submitting risk assessment: " + (result.error || "Unknown error"));
-        }
-    });
-
-    function renderHeatmap(heatmapData) {
-        const ctx = document.getElementById('riskHeatmapChart').getContext('2d');
-
-        if (riskHeatmapChart) {
-            riskHeatmapChart.destroy(); // Destroy existing chart instance
-        }
-
-        const labels = Object.keys(heatmapData);
-        const dataValues = Object.values(heatmapData).map(level => {
-            // Map risk level strings to numerical values for color scaling
-            if (level === 'High') return 3;
-            if (level === 'Medium') return 2;
-            if (level === 'Low') return 1;
-            return 0; // Default for 'N/A' or other
+        document.getElementById('closeAlert').addEventListener('click', function() {
+            document.getElementById('customAlert').classList.add('hidden');
         });
 
-        const backgroundColors = dataValues.map(value => {
-            if (value === 3) return 'rgba(239, 68, 68, 0.8)'; // Red for High
-            if (value === 2) return 'rgba(251, 191, 36, 0.8)'; // Amber for Medium
-            if (value === 1) return 'rgba(34, 197, 94, 0.8)'; // Green for Low
-            return 'rgba(156, 163, 175, 0.8)'; // Gray for N/A
-        });
+        // Function to handle the "Submit Risk Assessment" form
+        function submitAssessment(event) {
+            const projectName = document.getElementById('projectName').value;
+            customAlert(`Risk assessment submitted for: ${projectName}`);
+            // In a real application, you would send this data to a server here.
+            // For now, we'll just reset the form.
+            event.target.reset();
+        }
 
-        riskHeatmapChart = new Chart(ctx, {
-            type: 'bar', // Using bar chart for simplicity, can be customized to matrix chart if needed
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Risk Level',
-                    data: dataValues,
-                    backgroundColor: backgroundColors,
-                    borderColor: backgroundColors.map(color => color.replace('0.8', '1')), // Darker border
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y', // Make it a horizontal bar chart for better "heatmap" feel
-                plugins: {
-                    legend: {
-                        display: false // No legend needed for a simple heatmap
-                    },
-                    title: {
-                        display: true,
-                        text: 'Risk Distribution by Category (Latest Assessment)',
-                        font: {
-                            size: 16
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                const originalValue = Object.values(heatmapData)[context.dataIndex];
-                                return label + originalValue;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        display: false, // Hide x-axis (numerical values)
-                        max: 3.5, // Max value for scaling
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        grid: {
-                            display: false
-                        }
-                    }
+        let currentProjectName = ''; // Global variable to store the project name
+
+        // Function to open the detailed mitigation plan modal
+        function openMitigationModal(projectName) {
+            currentProjectName = projectName;
+            document.getElementById('mitigationProjectName').innerText = projectName;
+            document.getElementById('mitigationPlanModal').classList.remove('hidden');
+        }
+
+        // Function to close the detailed mitigation plan modal
+        function closeMitigationModal() {
+            document.getElementById('mitigationPlanModal').classList.add('hidden');
+        }
+
+        // The new function to handle submitting the detailed mitigation plan
+        function submitMitigationPlan(event) {
+            event.preventDefault();
+            const description = document.getElementById('mitigationDescription').value;
+            const responsibleTeam = document.getElementById('responsibleTeam').value;
+            const dueDate = document.getElementById('dueDate').value;
+
+            // In a real application, you would send this detailed data to a server
+            console.log(`Submitting mitigation plan for ${currentProjectName}:`);
+            console.log(`Description: ${description}`);
+            console.log(`Responsible Team: ${responsibleTeam}`);
+            console.log(`Due Date: ${dueDate}`);
+
+            customAlert(`Mitigation plan for '${currentProjectName}' has been submitted.`);
+            closeMitigationModal();
+
+            // Provide visual feedback on the dashboard
+            const projectElement = document.getElementById(`project-${currentProjectName.toLowerCase().replace(/\s/g, '-')}`);
+            if (projectElement) {
+                projectElement.classList.remove('bg-red-100');
+                projectElement.classList.add('bg-gray-100', 'text-gray-500');
+                const button = projectElement.querySelector('button');
+                if (button) {
+                    button.innerText = 'Mitigation In Progress';
+                    button.classList.remove('bg-red-500', 'hover:bg-red-600');
+                    button.classList.add('bg-gray-400', 'cursor-not-allowed');
+                    button.disabled = true;
                 }
             }
-        });
-    }
-
-    // Fetch data when the page loads
-    document.addEventListener('DOMContentLoaded', fetchRiskData);
+        }
     </script>
 </body>
 </html>
-{% endblock %}

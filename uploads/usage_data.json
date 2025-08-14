@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2025-07-15T10:34:22Z",
+    "user_id": "u102",
+    "action": "viewed",
+    "data_id": "doc_772"
+  },
+  {
+    "timestamp": "2025-07-15T10:35:11Z",
+    "user_id": "u102",
+    "action": "exported",
+    "data_id": "doc_772"
+  },
+  {
+    "timestamp": "2025-07-16T09:14:03Z",
+    "user_id": "u205",
+    "action": "modified",
+    "data_id": "doc_881"
+  }
+]
